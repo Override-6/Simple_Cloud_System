@@ -5,9 +5,9 @@ import java.nio.file.Path
 
 class CloudServer(workFolder: Path, port: Int) {
 
-    private val serverSocket      = new ServerSocket(port)
-    private[scs] val serverThreadGroup = new ThreadGroup("Server Thread Group")
-    private var open              = false
+    private             val serverSocket      = new ServerSocket(port)
+    private[connection] val serverThreadGroup = new ThreadGroup("Server Thread Group")
+    private var open                          = false
 
     def startServer(): Unit = {
         open = true

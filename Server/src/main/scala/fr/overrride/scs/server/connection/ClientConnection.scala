@@ -9,7 +9,11 @@ class ClientConnection(socket: Socket, server: CloudServer) {
 
     def startReception(): Unit = {
         open = true
-        new Thread(server.serverThreadGroup, () => startReception0(), s"$clientAddress's packet reader")
+        new Thread(
+            server.serverThreadGroup,
+            () => startReception0(),
+            s"$clientAddress's Packet Reader"
+        ).start()
     }
 
     private def startReception0(): Unit = {
