@@ -1,10 +1,8 @@
 plugins {
     id 'java'
     id 'scala'
-    id 'com.google.protobuf' version '0.8.17'
 }
 
-apply plugin: 'com.google.protobuf'
 
 group 'org.example'
 version '1.0-SNAPSHOT'
