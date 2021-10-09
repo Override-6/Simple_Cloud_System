@@ -16,7 +16,7 @@ object ClientMain {
         connection.startClient()
         println("Connection successfully bound to server.")
         val store = connection.getRootStore
-        store.uploadFile("CloudCapture.png", Path.of("C:\\Users\\maxim\\Desktop\\Capture.PNG"))
+        store.downloadFile("CloudCapture.png", Path.of("C:\\Users\\maxim\\Desktop\\CaptureResult.PNG"))
         println("Upload done.")
     }
 

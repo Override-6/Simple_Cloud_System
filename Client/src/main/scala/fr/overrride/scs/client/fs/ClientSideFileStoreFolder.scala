@@ -2,10 +2,11 @@ package fr.overrride.scs.client.fs
 
 import fr.overrride.scs.client.connection.CloudClient
 import fr.overrride.scs.common.fs.FSFHelper._
+import fr.overrride.scs.common.fs.PathOps.SuperPath
 import fr.overrride.scs.common.fs._
 import fr.overrride.scs.common.packet.exception.UnexpectedPacketException
 import fr.overrride.scs.common.packet.request._
-import fr.overrride.scs.common.packet.{FileStoreItemInfoPacket, NonePacket, Packet, StringPacket}
+import fr.overrride.scs.common.packet.{ObjectPacket, Packet}
 import fr.overrride.scs.stream.{RemoteFileReader, RemoteFileWriter}
 
 import java.nio.file.Path
@@ -18,8 +19,9 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
     override def getAvailableItems: Array[FileStoreItem] = {
         makeRequest(FileStoreFolderContentRequest) {
             in.readPacket() match {
-                case FileStoreContentResponse(items) => items.map(infoToItem)
-                case other                           =>
+                case ObjectPacket(items: Array[FileStoreItemInfo]) =>
+                    items.map(infoToItem)
+                case other                                         =>
                     throw new UnexpectedPacketException(s"Received unexpected packet '$other', expected ObjectPacket(Array[FileStoreItemInfo])")
             }
         }
@@ -28,9 +30,8 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
     override def findItem(name: String): Option[FileStoreItem] = {
         out.writePacket(FileStoreItemRequest(relativize(name)))
         in.readPacket() match {
-            case FileStoreItemInfoPacket(info) => Some(infoToItem(info))
-            case NonePacket                    => None
-            case o                             =>
+            case ObjectPacket(opt: Option[FileStoreItemInfo]) => opt.map(infoToItem)
+            case o                                            =>
                 throw new UnexpectedPacketException(s"Received unexpected response '$o'.")
         }
     }
@@ -64,10 +65,13 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
         val packet = requestPacket(relativize(fileName))
         out.writePacket(packet)
         in.readPacket() match {
-            case StringPacket(errorMsg) =>
-                throw new FileTransferException(s"Could not download file '$fileName' from server : $errorMsg")
-            case NonePacket             => onAccepted
-            case other                  => throw new UnexpectedPacketException(s"Received unexpected packet $other, expected ObjectPacket(Option[String]).")
+            case ObjectPacket(possibleErrorMsg: Option[String]) =>
+                possibleErrorMsg match {
+                    case None           => onAccepted
+                    case Some(errorMsg) => throw new FileTransferException(s"Could not download file '$fileName' from server : $errorMsg")
+                }
+
+            case other => throw new UnexpectedPacketException(s"Received unexpected packet $other, expected ObjectPacket(Option[String]).")
         }
     }
 
@@ -84,7 +88,7 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
         subFolder.getAvailableItems.foreach(folderItem => {
             val info     = folderItem.info
             val itemPath = info.relativePath
-            val itemDest = path.resolve(folderName)
+            val itemDest = path / folderName
             val itemName = itemPath.drop(itemPath.lastIndexOf('/'))
             if (info.isFolder) {
                 subFolder.transferFolder(itemName, itemDest)(transferFile)
