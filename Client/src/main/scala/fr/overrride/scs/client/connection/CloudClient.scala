@@ -1,6 +1,6 @@
 package fr.overrride.scs.client.connection
 
-import fr.overrride.scs.client.fs.FileStoreFolder
+import fr.overrride.scs.client.fs.ClientSideFileStoreFolder
 import fr.overrride.scs.common.fs.FileStoreItemInfo
 import fr.overrride.scs.stream.{PacketInputStream, PacketOutputStream}
 
@@ -10,7 +10,7 @@ class CloudClient(socket: Socket) {
 
     private var open                          = true
     private[connection] val clientThreadGroup = new ThreadGroup("Client Thread Group")
-    private var store: FileStoreFolder = _
+    private var store: ClientSideFileStoreFolder = _
 
     private lazy val pis = new PacketInputStream(socket.getInputStream)
     private lazy val pos = new PacketOutputStream(socket.getOutputStream)
@@ -25,6 +25,11 @@ class CloudClient(socket: Socket) {
         pos
     }
 
+    def getRootStore: ClientSideFileStoreFolder = {
+        ensureOpen()
+        store
+    }
+
     def startClient(): Unit = {
         open = true
         new Thread(
@@ -36,7 +41,7 @@ class CloudClient(socket: Socket) {
 
     private def startClient0(): Unit = {
         val in = getPacketInputStream
-        store = new FileStoreFolder(FileStoreItemInfo("/", isFolder = true, -1), this)
+        store = new ClientSideFileStoreFolder(FileStoreItemInfo("/", isFolder = true, -1), this)
         while (open) {
             val packet = in.readPacket()
             println(s"packet = $packet")

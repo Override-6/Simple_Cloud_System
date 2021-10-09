@@ -3,6 +3,7 @@ package fr.overrride.scs.client
 import fr.overrride.scs.client.connection.CloudClient
 
 import java.net.Socket
+import java.nio.file.Path
 
 object ClientMain {
 
@@ -14,6 +15,8 @@ object ClientMain {
         val connection = new CloudClient(socket)
         connection.startClient()
         println("Connection successfully bound to server.")
+        val store = connection.getRootStore
+        store.uploadFile("CloudCapture.png", Path.of("C:\\Users\\maxim\\Desktop\\Capture.PNG"))
     }
 
     //noinspection SameParameterValue
