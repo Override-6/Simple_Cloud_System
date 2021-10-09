@@ -1,0 +1,6 @@
+rootProject.name = 'Simple Cloud System'
+include 'Client'
+include 'Server'
+include 'Encryption'
+include 'Stream'
+
