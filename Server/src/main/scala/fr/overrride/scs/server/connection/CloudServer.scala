@@ -17,7 +17,9 @@ class CloudServer(workFolder: Path, port: Int) {
     private def startServer0(): Unit = {
         while (open) {
             val accepted = serverSocket.accept()
-
+            println(s"Accepted socket $accepted.")
+            val connection = new ClientConnection(accepted, this)
+            connection.startReception()
         }
     }
 

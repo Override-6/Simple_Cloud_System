@@ -1,5 +1,7 @@
 package fr.overrride.scs.server.connection
 
+import fr.overrride.scs.stream.PacketInputStream
+
 import java.net.Socket
 
 class ClientConnection(socket: Socket, server: CloudServer) {
@@ -17,10 +19,10 @@ class ClientConnection(socket: Socket, server: CloudServer) {
     }
 
     private def startReception0(): Unit = {
-        val in = socket.getInputStream
+        val in = new PacketInputStream(socket.getInputStream)
         while (open) {
-            val got = in.readAllBytes()
-            println(s"got = ${new String(got)}")
+            val packet = in.readPacket()
+            println(s"packet = packet")
         }
     }
 
