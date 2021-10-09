@@ -1,8 +1,8 @@
 package fr.overrride.scs.server.connection
 
 import fr.overrride.scs.common.fs.{FileStoreFolder, FileStoreItemInfo}
-import fr.overrride.scs.common.packet.request.{FileDownloadRequest, FileStoreFolderContentRequest, FileStoreItemRequest, FileUploadRequest}
-import fr.overrride.scs.common.packet.{ObjectPacket, Packet}
+import fr.overrride.scs.common.packet.request._
+import fr.overrride.scs.common.packet.{FileStoreItemInfoPacket, NonePacket, Packet, StringPacket}
 import fr.overrride.scs.server.fs.ServerSideFileStoreFolder
 import fr.overrride.scs.stream.{PacketInputStream, PacketOutputStream}
 
@@ -37,16 +37,15 @@ class ClientConnection(socket: Socket, storeFolderPath: Path, server: CloudServe
     private def startReception0(): Unit = {
         if (closed)
             throw new IllegalStateException("Client Connection is closed.")
-        val in = new PacketInputStream(socket.getInputStream)
         while (open) {
             val packet = in.readPacket()
             try {
                 handlePacket(packet)
             } catch {
                 case e: FileSystemException =>
-                    out.writePacket(ObjectPacket(e.getMessage))
+                    out.writePacket(StringPacket(e.getMessage))
                 case NonFatal(e)            =>
-                    out.writePacket(ObjectPacket(e.getMessage))
+                    out.writePacket(StringPacket(e.getMessage))
                     close()
                     throw e
             }
@@ -64,12 +63,14 @@ class ClientConnection(socket: Socket, storeFolderPath: Path, server: CloudServe
             val opt = getStore(relativePath, true)
                     .findItem(extractFileName(relativePath))
                     .map(_.info)
-            out.writePacket(ObjectPacket(opt))
+            if (opt.isDefined)
+                out.writePacket(FileStoreItemInfoPacket(opt.get))
+            else out.writePacket(NonePacket)
         case FileStoreFolderContentRequest(relativePath) =>
             val items = getStore(relativePath, false)
                     .getAvailableItems
                     .map(_.info)
-            out.writePacket(ObjectPacket(items))
+            out.writePacket(FileStoreContentResponse(items))
     }
 
     private def extractFileName(relativePath: String): String = {

@@ -1,7 +1,10 @@
 plugins {
     id 'java'
     id 'scala'
+    id 'com.google.protobuf' version '0.8.17'
 }
+
+apply plugin: 'com.google.protobuf'
 
 group 'org.example'
 version '1.0-SNAPSHOT'
@@ -13,6 +16,7 @@ repositories {
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+
     implementation group: 'org.scala-lang', name: 'scala-library', version: '2.13.6'
 }
 

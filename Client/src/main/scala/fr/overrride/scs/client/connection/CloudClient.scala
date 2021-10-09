@@ -12,8 +12,8 @@ class CloudClient(socket: Socket) {
     private[connection] val clientThreadGroup = new ThreadGroup("Client Thread Group")
     private var store: ClientSideFileStoreFolder = _
 
-    private lazy val pis = new PacketInputStream(socket.getInputStream)
-    private lazy val pos = new PacketOutputStream(socket.getOutputStream)
+    private val pos = new PacketOutputStream(socket.getOutputStream)
+    private val pis = new PacketInputStream(socket.getInputStream)
 
     def getPacketInputStream: PacketInputStream = {
         ensureOpen()
@@ -32,21 +32,9 @@ class CloudClient(socket: Socket) {
 
     def startClient(): Unit = {
         open = true
-        new Thread(
-            clientThreadGroup,
-            () => startClient0(),
-            "Server Packet Reader"
-        ).start()
+        store = new ClientSideFileStoreFolder(this)(FileStoreItemInfo("/", isFolder = true, -1))
     }
 
-    private def startClient0(): Unit = {
-        val in = getPacketInputStream
-        store = new ClientSideFileStoreFolder(FileStoreItemInfo("/", isFolder = true, -1), this)
-        while (open) {
-            val packet = in.readPacket()
-            println(s"packet = $packet")
-        }
-    }
 
     @inline
     private def ensureOpen(): Unit = {

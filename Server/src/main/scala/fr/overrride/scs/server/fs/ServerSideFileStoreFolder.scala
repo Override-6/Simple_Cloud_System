@@ -2,6 +2,7 @@ package fr.overrride.scs.server.fs
 
 import fr.overrride.scs.common.fs.FSFHelper._
 import fr.overrride.scs.common.fs.{FileStoreFile, FileStoreFolder, FileStoreItem, FileStoreItemInfo}
+import fr.overrride.scs.common.packet.NonePacket
 import fr.overrride.scs.server.connection.ClientConnection
 import fr.overrride.scs.stream.{RemoteFileReader, RemoteFileWriter}
 
@@ -13,12 +14,14 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
 
     override def uploadFile(name: String, source: Path, segmentSize: Int): Unit = {
         ensureFile(source)
+        sendRequestAccepted()
         val writer = new RemoteFileWriter(out)
         writer.writeFile(source, relativize(name), segmentSize)
     }
 
     override def downloadFile(name: String, dest: Path): Unit = {
         ensureFolder(dest)
+        sendRequestAccepted()
         val reader = new RemoteFileReader(in)
         reader.readFile(dest)
     }
@@ -32,13 +35,13 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
     }
 
     override def findItem(name: String): Option[FileStoreItem] = {
-        val relativePath = relativize(name)
-        val path         = currentPath.resolve(relativePath)
+        val relativePath: String = relativize(name)
+        val path                 = currentPath.resolve(relativePath)
         if (Files.notExists(path)) {
             return None
         }
-        val info = FileStoreItemInfo(relativePath, Files.isDirectory(path), Files.getLastModifiedTime(path).toMillis)
-        val item = infoToItem(info)
+        val subInfo = FileStoreItemInfo(relativePath, Files.isDirectory(path), Files.getLastModifiedTime(path).toMillis)
+        val item    = infoToItem(subInfo)
         Some(item)
     }
 
@@ -51,6 +54,10 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
                     val lastModified = Files.getLastModifiedTime(path).toMillis
                     infoToItem(FileStoreItemInfo(relativePath, Files.isDirectory(path), lastModified))
                 }
+    }
+
+    private def sendRequestAccepted(): Unit = {
+        out.writePacket(NonePacket)
     }
 
     private def infoToItem(info: FileStoreItemInfo): FileStoreItem = {

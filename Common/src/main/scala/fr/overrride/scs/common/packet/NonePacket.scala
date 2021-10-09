@@ -1,3 +1,5 @@
 package fr.overrride.scs.common.packet
 
-trait Packet extends Serializable
+object NonePacket extends Packet {
+
+}

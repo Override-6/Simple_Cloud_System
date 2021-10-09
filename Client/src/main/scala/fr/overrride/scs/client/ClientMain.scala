@@ -17,6 +17,7 @@ object ClientMain {
         println("Connection successfully bound to server.")
         val store = connection.getRootStore
         store.uploadFile("CloudCapture.png", Path.of("C:\\Users\\maxim\\Desktop\\Capture.PNG"))
+        println("Upload done.")
     }
 
     //noinspection SameParameterValue
