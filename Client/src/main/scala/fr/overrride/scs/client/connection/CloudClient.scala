@@ -1,6 +1,7 @@
 package fr.overrride.scs.client.connection
 
-import fr.overrride.scs.stream.PacketInputStream
+import fr.overrride.scs.client.fs.FileStoreFolder
+import fr.overrride.scs.stream.{PacketInputStream, PacketOutputStream}
 
 import java.net.Socket
 
@@ -8,6 +9,20 @@ class CloudClient(socket: Socket) {
 
     private var open                          = true
     private[connection] val clientThreadGroup = new ThreadGroup("Client Thread Group")
+    private var store: FileStoreFolder = _
+
+    private lazy val pis = new PacketInputStream(socket.getInputStream)
+    private lazy val pos = new PacketOutputStream(socket.getOutputStream)
+
+    def getPacketInputStream: PacketInputStream = {
+        ensureOpen()
+        pis
+    }
+
+    def getPacketOutputStream: PacketOutputStream = {
+        ensureOpen()
+        pos
+    }
 
     def startClient(): Unit = {
         open = true
@@ -19,11 +34,18 @@ class CloudClient(socket: Socket) {
     }
 
     private def startClient0(): Unit = {
-        val in = new PacketInputStream(socket.getInputStream)
+        val in = getPacketInputStream
+        store = new FileStoreFolder(this)
         while (open) {
             val packet = in.readPacket()
             println(s"packet = $packet")
         }
+    }
+
+    @inline
+    private def ensureOpen(): Unit = {
+        if (!open)
+            throw new IllegalStateException("Cloud Client is not open.")
     }
 
 }
