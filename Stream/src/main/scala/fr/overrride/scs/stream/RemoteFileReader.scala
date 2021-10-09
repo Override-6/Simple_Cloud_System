@@ -1,20 +1,20 @@
 package fr.overrride.scs.stream
 
 import fr.overrride.scs.common.fs.FileStoreItemInfo
+import fr.overrride.scs.common.packet.{EOFPacket, FileSegmentPacket, ObjectPacket}
 import fr.overrride.scs.common.packet.exception.{FileCollapseException, UnexpectedPacketException}
-import fr.overrride.scs.common.packet.{EOFPacket, FileSegmentPacket, FileStoreItemInfoPacket}
 
 import java.io.OutputStream
 import java.nio.file.attribute.FileTime
 import java.nio.file.{Files, NotDirectoryException, Path}
 
 class RemoteFileReader(in: PacketInputStream) {
-    def readFile(outputFolder: Path): Int = {
-        if (!Files.isDirectory(outputFolder))
-            throw new NotDirectoryException(s"$outputFolder is not a directory.")
+    def readFile(dest: Path): Int = {
+        if (Files.isDirectory(dest))
+            throw new NotDirectoryException(s"$dest is a directory.")
         val info = nextFileInfo()
-        val read = readFileContent(Files.newOutputStream(outputFolder), info)
-        Files.setLastModifiedTime(outputFolder, FileTime.fromMillis(info.lastModified))
+        val read = readFileContent(Files.newOutputStream(dest), info)
+        Files.setLastModifiedTime(dest, FileTime.fromMillis(info.lastModified))
         read
     }
 
@@ -42,8 +42,8 @@ class RemoteFileReader(in: PacketInputStream) {
 
     private def nextFileInfo(): FileStoreItemInfo = {
         in.readPacket() match {
-            case FileStoreItemInfoPacket(info: FileStoreItemInfo) => info
-            case other                                            =>
+            case ObjectPacket(info: FileStoreItemInfo) => info
+            case other                                 =>
                 throw new UnexpectedPacketException(s"Received unexpected packet of type ${other.getClass.getName}, expected ObjectPacket(FileStoreItemInfo).")
         }
     }
