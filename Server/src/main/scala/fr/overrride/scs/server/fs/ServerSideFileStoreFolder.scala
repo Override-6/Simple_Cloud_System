@@ -30,7 +30,7 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
     }
 
     override def downloadFile(name: String, dest: Path): Unit = {
-        Try(ensureFile(dest, false)) match {
+        Try(ensureFile(dest)) match {
             case Failure(e) =>
                 sendRequestRefused(name, e.getMessage)
             case Success(_) =>
@@ -45,8 +45,8 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
         transferFolder(folderName, dest)(_.downloadFile(_, _))
     }
 
-    override def uploadFolder(folderName: String, source: Path): Unit = {
-        transferFolder(folderName, source)(_.uploadFile(_, _))
+    override def uploadFolder(folderName: String, source: Path, segmentSize: Int): Unit = {
+        transferFolder(folderName, source)(_.uploadFile(_, _, segmentSize))
     }
 
     override def findItem(name: String): Option[FileStoreItem] = {
