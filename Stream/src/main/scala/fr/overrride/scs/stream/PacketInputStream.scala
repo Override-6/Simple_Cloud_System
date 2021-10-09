@@ -1,7 +1,7 @@
 package fr.overrride.scs.stream
 
-import fr.overrride.scs.stream.packet.Packet
-import fr.overrride.scs.stream.packet.exception.UnexpectedPacketException
+import fr.overrride.scs.common.packet.Packet
+import fr.overrride.scs.common.packet.exception.UnexpectedPacketException
 
 import java.io.{InputStream, ObjectInputStream}
 

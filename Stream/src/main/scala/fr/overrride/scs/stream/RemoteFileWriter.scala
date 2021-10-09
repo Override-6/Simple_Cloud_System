@@ -1,6 +1,7 @@
 package fr.overrride.scs.stream
 
-import fr.overrride.scs.stream.packet.{EOFPacket, FileInfoPacket, FileSegment}
+import fr.overrride.scs.common.packet.{EOFPacket, FileSegment, ObjectPacket}
+import fr.overrride.scs.stream.packet.ObjectPacket
 
 import java.io.InputStream
 import java.nio.file.{Files, Path}
@@ -12,7 +13,7 @@ class RemoteFileWriter(out: PacketOutputStream) {
         writeFileContent(path, info, segmentSize)
     }
 
-    private def writeFileContent(path: Path, info: FileInfoPacket, segmentSize: Int): Unit = {
+    private def writeFileContent(path: Path, info: ObjectPacket, segmentSize: Int): Unit = {
         val buff  = new Array[Byte](segmentSize)
         val in    = Files.newInputStream(path)
         var count = 0
@@ -25,7 +26,7 @@ class RemoteFileWriter(out: PacketOutputStream) {
 
     protected def readContent(in: InputStream, buff: Array[Byte]): Int = in.read(buff)
 
-    private def writeFileInfo(file: Path): FileInfoPacket = {
+    private def writeFileInfo(file: Path): ObjectPacket = {
         val packet = FileInfoPacket(file.getFileName.toString, Files.getLastModifiedTime(file).toMillis)
         out.writePacket(packet)
         packet

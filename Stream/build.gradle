@@ -15,6 +15,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
     implementation group: 'org.scala-lang', name: 'scala-library', version: '2.13.6'
 
+    implementation project(':Common')
 }
 
 test {
