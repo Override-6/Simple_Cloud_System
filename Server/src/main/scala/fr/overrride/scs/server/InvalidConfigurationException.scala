@@ -1,5 +1,3 @@
 package fr.overrride.scs.server
 
-class InvalidConfigurationException(msg: String) extends Exception(msg) {
-
-}
+class InvalidConfigurationException(msg: String) extends Exception(msg)
