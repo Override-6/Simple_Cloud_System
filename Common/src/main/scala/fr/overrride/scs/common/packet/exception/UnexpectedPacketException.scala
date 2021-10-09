@@ -1,4 +1,4 @@
-package fr.overrride.scs.stream.packet.exception
+package fr.overrride.scs.common.packet.exception
 
 class UnexpectedPacketException(msg: String) extends PacketException(msg) {
 
