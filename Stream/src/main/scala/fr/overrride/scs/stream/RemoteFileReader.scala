@@ -7,8 +7,6 @@ import fr.overrride.scs.common.packet.{EOFPacket, FileSegment, ObjectPacket}
 import java.io.OutputStream
 import java.nio.file.attribute.FileTime
 import java.nio.file.{Files, NotDirectoryException, Path}
-import java.time.Instant
-import java.util.concurrent.TimeUnit
 
 class RemoteFileReader(in: PacketInputStream) {
 
@@ -17,7 +15,7 @@ class RemoteFileReader(in: PacketInputStream) {
             throw new NotDirectoryException(s"$outputFolder is not a directory.")
         val info = nextFileInfo()
         val read = readFileContent(Files.newOutputStream(outputFolder), info)
-        Files.setLastModifiedTime(outputFolder, new FileTime(info.lastModified, TimeUnit.MILLISECONDS, Instant.now()))
+        Files.setLastModifiedTime(outputFolder, FileTime.fromMillis(info.lastModified))
         read
     }
 
