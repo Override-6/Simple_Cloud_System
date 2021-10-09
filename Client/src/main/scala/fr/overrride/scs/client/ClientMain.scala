@@ -9,9 +9,11 @@ object ClientMain {
     def main(implicit args: Array[String]): Unit = {
         val serverAddress = getOrElse("--server-address", "localhost")
         val serverPort    = getOrElse("--server-port", "48483").toInt
-        val socket        = new Socket(serverAddress, serverPort)
+        println(s"Connecting to $serverAddress:$serverPort...")
+        val socket     = new Socket(serverAddress, serverPort)
         val connection = new CloudClient(socket)
-        connection.start()
+        connection.startClient()
+        println("Connection successfully bound to server.")
     }
 
     //noinspection SameParameterValue
