@@ -44,8 +44,8 @@ class RemoteFileReader(in: PacketInputStream) {
     private def nextFileInfo(): FileStoreItemInfo = {
         in.readPacket() match {
             case ObjectPacket(info: FileStoreItemInfo) => info
-
-            case other => throw new UnexpectedPacketException(s"Received unexpected packet of type ${other.getClass.getName}, expected ObjectPacket(FileStoreItemInfo).")
+            case other                                 =>
+                throw new UnexpectedPacketException(s"Received unexpected packet of type ${other.getClass.getName}, expected ObjectPacket(FileStoreItemInfo).")
         }
     }
 

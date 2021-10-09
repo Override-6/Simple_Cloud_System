@@ -8,14 +8,14 @@ import java.nio.file.{Files, Path}
 
 class RemoteFileWriter(out: PacketOutputStream) {
 
-    def writeFile(path: Path, remotePath: String, segmentSize: Int): Unit = {
-        val info = writeFileInfo(path, remotePath)
-        writeFileContent(path, info, segmentSize)
+    def writeFile(source: Path, cloudPath: String, segmentSize: Int): Unit = {
+        val info = writeFileInfo(source, cloudPath)
+        writeFileContent(source, info, segmentSize)
     }
 
-    private def writeFileContent(path: Path, info: FileStoreItemInfo, segmentSize: Int): Unit = {
+    private def writeFileContent(source: Path, info: FileStoreItemInfo, segmentSize: Int): Unit = {
         val buff  = new Array[Byte](segmentSize)
-        val in    = Files.newInputStream(path)
+        val in    = Files.newInputStream(source)
         var count = 0
         while (count != -1) {
             count = readContent(in, buff)
