@@ -27,7 +27,7 @@ class DownloadExecutor(client: CloudClient) extends CommandExecutor {
 
     private def checkArgs(implicit args: Array[String]): Unit = {
         if (args.length != 3)
-            throw CommandException("syntax: download <file> -dest <destination>")
+            throw CommandException("syntax: download <source> -dest <destination>")
         CommandUtils.ensureArgsContains("-dest")
     }
 }

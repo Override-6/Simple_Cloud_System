@@ -1,7 +1,7 @@
 package fr.overrride.scs.client
 
 import fr.overrride.scs.client.command.CommandManager
-import fr.overrride.scs.client.command.commands.{DownloadExecutor, LSExecutor}
+import fr.overrride.scs.client.command.commands.{DownloadExecutor, LSExecutor, UploadExecutor}
 import fr.overrride.scs.client.connection.CloudClient
 
 import java.net.Socket

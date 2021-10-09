@@ -56,9 +56,9 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
         transferFolder(folderName, dest)(_.downloadFile(_, _))
     }
 
-    override def uploadFolder(folderName: String, source: Path): Unit = {
+    override def uploadFolder(folderName: String, source: Path, segmentSize: Int): Unit = {
         ensureFolder(source)
-        transferFolder(folderName, source)(_.uploadFile(_, _))
+        transferFolder(folderName, source)(_.uploadFile(_, _, segmentSize))
     }
 
     private def makeRequest[T](requestPacket: String => Packet, fileName: String = "")(onAccepted: => T): T = {
@@ -68,7 +68,7 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
             case ObjectPacket(possibleErrorMsg: Option[String]) =>
                 possibleErrorMsg match {
                     case None           => onAccepted
-                    case Some(errorMsg) => throw new FileTransferException(s"Could not download file '$fileName' from server : $errorMsg")
+                    case Some(errorMsg) => throw new FileTransferException(s"Could not perform file transfer '$fileName' from server : $errorMsg")
                 }
 
             case other => throw new UnexpectedPacketException(s"Received unexpected packet $other, expected ObjectPacket(Option[String]).")
