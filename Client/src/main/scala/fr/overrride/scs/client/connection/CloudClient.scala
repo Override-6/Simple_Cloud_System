@@ -1,6 +1,7 @@
 package fr.overrride.scs.client.connection
 
 import fr.overrride.scs.client.fs.FileStoreFolder
+import fr.overrride.scs.common.fs.FileStoreItemInfo
 import fr.overrride.scs.stream.{PacketInputStream, PacketOutputStream}
 
 import java.net.Socket
@@ -35,7 +36,7 @@ class CloudClient(socket: Socket) {
 
     private def startClient0(): Unit = {
         val in = getPacketInputStream
-        store = new FileStoreFolder(this)
+        store = new FileStoreFolder(FileStoreItemInfo("/", isFolder = true, -1), this)
         while (open) {
             val packet = in.readPacket()
             println(s"packet = $packet")
