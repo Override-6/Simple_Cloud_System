@@ -47,7 +47,7 @@ class ClientConnection(socket: Socket, storeFolderPath: Path, server: CloudServe
                 case e: SocketException =>
                     Console.err.println(s"Socket exception for client $clientAddress: $e")
                     close()
-                case NonFatal(e) =>
+                case NonFatal(e)        =>
                     close()
                     throw e
             }
@@ -67,10 +67,22 @@ class ClientConnection(socket: Socket, storeFolderPath: Path, server: CloudServe
                     .map(_.info)
             out.writePacket(ObjectPacket(opt))
         case FileStoreFolderContentRequest(relativePath) =>
-            val items = getStore(relativePath, false)
-                    .getAvailableItems
-                    .map(_.info)
-            out.writePacket(ObjectPacket(items))
+            retrieveContentRequest(relativePath)
+    }
+
+    private def retrieveContentRequest(relativePath: String): Unit = {
+        val path = storeFolderPath / relativePath
+        if (Files.notExists(path)) {
+            out.writePacket(ObjectPacket(Some(s"Folder $relativePath does not exists")))
+            return
+        }
+        if (!Files.isDirectory(path))
+            out.writePacket(ObjectPacket(Some(s"$relativePath is not a directory")))
+        val items = getStore(relativePath, false)
+                .getAvailableItems
+                .map(_.info)
+        out.writePacket(ObjectPacket(None)) //Say that the request is available
+        out.writePacket(ObjectPacket(items))
     }
 
     private def extractFileName(relativePath: String): String = {
