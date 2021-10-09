@@ -1,4 +1,4 @@
-package fr.overrride.scs
+package fr.overrride.scs.server
 
 import java.nio.file.{Files, Path}
 

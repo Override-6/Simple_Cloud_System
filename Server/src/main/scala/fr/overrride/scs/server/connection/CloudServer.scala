@@ -1,4 +1,4 @@
-package fr.overrride.scs.connection
+package fr.overrride.scs.server.connection
 
 import java.net.ServerSocket
 import java.nio.file.Path
