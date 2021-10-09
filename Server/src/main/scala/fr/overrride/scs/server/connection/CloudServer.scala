@@ -1,5 +1,7 @@
 package fr.overrride.scs.server.connection
 
+import fr.overrride.scs.common.fs.PathOps.SuperPath
+
 import java.io.Externalizable
 import java.net.ServerSocket
 import java.nio.file.Path
@@ -18,7 +20,7 @@ class CloudServer(workFolder: Path, port: Int) {
         while (open) {
             val accepted = serverSocket.accept()
             println(s"Accepted socket $accepted.")
-            val connectionFolder = workFolder.resolve(accepted.getInetAddress.getHostAddress)
+            val connectionFolder = workFolder / accepted.getInetAddress.getHostAddress
             val connection = new ClientConnection(accepted, connectionFolder, this)
             connection.startReception()
         }

@@ -1,29 +1,44 @@
 package fr.overrride.scs.server.fs
 
 import fr.overrride.scs.common.fs.FSFHelper._
+import fr.overrride.scs.common.fs.PathOps.SuperPath
 import fr.overrride.scs.common.fs.{FileStoreFile, FileStoreFolder, FileStoreItem, FileStoreItemInfo}
-import fr.overrride.scs.common.packet.NonePacket
+import fr.overrride.scs.common.packet.ObjectPacket
 import fr.overrride.scs.server.connection.ClientConnection
 import fr.overrride.scs.stream.{RemoteFileReader, RemoteFileWriter}
 
 import java.nio.file.{Files, Path}
+import scala.util.{Failure, Success, Try}
 
 class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)(implicit override val info: FileStoreItemInfo) extends FileStoreFolder {
 
-    import connection.{in, out}
+    private val in            = connection.in
+    private val out           = connection.out
+    private val clientAddress = connection.clientAddress
 
     override def uploadFile(name: String, source: Path, segmentSize: Int): Unit = {
-        ensureFile(source)
-        sendRequestAccepted()
-        val writer = new RemoteFileWriter(out)
-        writer.writeFile(source, relativize(name), segmentSize)
+        Try(ensureFile(source, false)) match {
+            case Failure(e) =>
+                sendRequestRefused(name, e.getMessage)
+            case Success(_) =>
+                sendRequestAccepted()
+                println(s"Client $clientAddress is downloading file ${currentPath / name}...")
+                val writer = new RemoteFileWriter(out)
+                writer.writeFile(source, relativize(name), segmentSize)
+        }
+
     }
 
     override def downloadFile(name: String, dest: Path): Unit = {
-        ensureFolder(dest)
-        sendRequestAccepted()
-        val reader = new RemoteFileReader(in)
-        reader.readFile(dest)
+        Try(ensureFile(dest, false)) match {
+            case Failure(e) =>
+                sendRequestRefused(name, e.getMessage)
+            case Success(_) =>
+                sendRequestAccepted()
+                println(s"Client $clientAddress is uploading file ${currentPath / name}...")
+                val reader = new RemoteFileReader(in)
+                reader.readFile(dest)
+        }
     }
 
     override def downloadFolder(folderName: String, dest: Path): Unit = {
@@ -36,7 +51,7 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
 
     override def findItem(name: String): Option[FileStoreItem] = {
         val relativePath: String = relativize(name)
-        val path                 = currentPath.resolve(relativePath)
+        val path                 = currentPath / relativePath
         if (Files.notExists(path)) {
             return None
         }
@@ -57,23 +72,28 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
     }
 
     private def sendRequestAccepted(): Unit = {
-        out.writePacket(NonePacket)
+        out.writePacket(ObjectPacket(None))
+    }
+
+    private def sendRequestRefused(fileName: String, msg: String): Unit = {
+        Console.err.println(s"Client could not start file transfer for ${currentPath / fileName}: $msg")
+        out.writePacket(ObjectPacket(Some(msg)))
     }
 
     private def infoToItem(info: FileStoreItemInfo): FileStoreItem = {
         if (info.isFolder)
-            new ServerSideFileStoreFolder(connection, currentPath.resolve(info.relativePath))(info)
+            new ServerSideFileStoreFolder(connection, currentPath / info.relativePath)(info)
         else
             new FileStoreFile(info)
     }
 
     private def transferFolder(folderName: String, path: Path)(transferFile: (FileStoreFolder, String, Path) => Unit): Unit = {
         val remotePath = relativize(folderName)
-        val subFolder  = new ServerSideFileStoreFolder(connection, currentPath.resolve(folderName))(FileStoreItemInfo(remotePath, isFolder = true))
+        val subFolder  = new ServerSideFileStoreFolder(connection, currentPath / folderName)(FileStoreItemInfo(remotePath, isFolder = true))
         subFolder.getAvailableItems.foreach(folderItem => {
             val info     = folderItem.info
             val itemPath = info.relativePath
-            val itemDest = path.resolve(folderName)
+            val itemDest = path / folderName
             val itemName = itemPath.drop(itemPath.lastIndexOf('/'))
             if (info.isFolder) {
                 subFolder.transferFolder(itemName, itemDest)(transferFile)
