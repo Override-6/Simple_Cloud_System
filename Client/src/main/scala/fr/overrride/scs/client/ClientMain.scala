@@ -1,9 +1,10 @@
 package fr.overrride.scs.client
 
+import fr.overrride.scs.client.command.CommandManager
+import fr.overrride.scs.client.command.commands.{DownloadExecutor, LSExecutor}
 import fr.overrride.scs.client.connection.CloudClient
 
 import java.net.Socket
-import java.nio.file.Path
 
 object ClientMain {
 
@@ -15,9 +16,15 @@ object ClientMain {
         val connection = new CloudClient(socket)
         connection.startClient()
         println("Connection successfully bound to server.")
-        val store = connection.getRootStore
-        store.downloadFile("CloudCapture.png", Path.of("C:\\Users\\maxim\\Desktop\\CaptureResult.PNG"))
-        println("Upload done.")
+        val manager = new CommandManager
+        registerCommands(manager, connection)
+        manager.start()
+    }
+
+    private def registerCommands(manager: CommandManager, connection: CloudClient): Unit = {
+        manager.register("ls", new LSExecutor(connection))
+        manager.register("download", new DownloadExecutor(connection))
+        manager.register("upload", new UploadExecutor(connection))
     }
 
     //noinspection SameParameterValue
