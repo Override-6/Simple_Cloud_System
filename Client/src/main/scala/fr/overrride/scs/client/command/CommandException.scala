@@ -13,4 +13,9 @@
 
 package fr.overrride.scs.client.command
 
+/**
+ * Thrown to fail a command: This command should only be used into [[CommandExecutor.execute]] method.
+ * When the exception is catch by the [[CommandManager]], the error message is print without the statck trace.
+ * This command should only be used in order to fail a command and print an error message in the command.
+ * */
 case class CommandException(msg: String) extends RuntimeException(msg)

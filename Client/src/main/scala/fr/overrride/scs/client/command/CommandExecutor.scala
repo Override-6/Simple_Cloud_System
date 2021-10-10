@@ -13,8 +13,16 @@
 
 package fr.overrride.scs.client.command
 
+/**
+ * Interface used by [[CommandManager]] to execute a command when invoked
+ * */
 trait CommandExecutor {
 
+    /**
+     * Execute the command.
+     * Its functioning is implementation-specific.
+     * */
+    @throws[CommandException]("When the user entered an invalid command line arguments")
     def execute(implicit args: Array[String]): Unit
 
 }

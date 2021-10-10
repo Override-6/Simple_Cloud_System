@@ -7,6 +7,9 @@ import java.io.InputStream
 
 class ClientSideRemoteFileWriter(secrets: UserSecrets, out: PacketOutputStream) extends RemoteFileWriter(out) {
 
+    /**
+     * Decrypts a content using the given [[UserSecrets]]
+     * */
     override protected def readContent(in: InputStream, len: Int): Array[Byte] = {
         val seg = super.readContent(in, len)
         if (seg.isEmpty)

@@ -10,10 +10,16 @@ import fr.overrride.scs.common.packet.{ObjectPacket, Packet}
 
 import java.nio.file.{Files, Path}
 
+/**
+ * This class represents a distant folder in the server's storage.
+ * Most of the time, this class performs requests to the server.
+ * */
 class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info: FileStoreItemInfo) extends FileStoreFolder {
 
+    //In/Out packet streams of the client
     private val out = client.getPacketOutputStream
     private val in  = client.getPacketInputStream
+
 
     override def createFile(name: String): Unit = {
         makeRequest(CreateItemRequest(_, false), name) {}

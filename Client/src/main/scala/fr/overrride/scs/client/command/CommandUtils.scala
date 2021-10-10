@@ -17,10 +17,19 @@ import fr.overrride.scs.common.fs.{FileStoreFolder, FileStoreItem}
 
 import java.util.regex.Pattern
 
+/**
+ * Command utility for [[CommandExecutor]] implementations
+ * */
 object CommandUtils {
 
     private val PathRegex = Pattern.compile("[/\\\\]+")
 
+    /**
+     * ensure that the given arguments contains all expected arguments.
+     * @param args the command arguments array.
+     * @param expected the argument list the args array <b>must contain.</b>
+     * @throws CommandException if expected argument not found in provided args.
+     * */
     @throws[CommandException]("if expected argument not found in provided args.")
     def ensureArgsContains(expected: String*)(implicit args: Array[String]): Unit = {
         val success = expected.forall(args.contains)
@@ -30,27 +39,20 @@ object CommandUtils {
         throw CommandException(errorMsg)
     }
 
-    def argAfter(ref: String)(implicit args: Array[String]): String =
-        args(args.indexOf(ref) + 1)
+    /**
+     * Returns the argument after 'ref' in the command arguments
+     * @param argument the argument
+     * @return the argument that follows [[argument]]
+     * */
+    def argAfter(argument: String)(implicit args: Array[String]): String =
+        args(args.indexOf(argument) + 1)
 
-    def getValue(name: String, default: String, args: Array[String]): String = {
-        args.foreach(arg => {
-            val pair = arg.split('=')
-            if (pair(0) == name && pair.length == 2)
-                return pair(1)
-        })
-        default
-    }
-
-    def getValue(name: String, args: Array[String])(implicit usage: String): String = {
-        args.foreach(arg => {
-            val pair = arg.split('=')
-            if (pair(0) == name && pair.length == 2)
-                return pair(1)
-        })
-        throw CommandException(s"Missing argument '$name=?', " + usage)
-    }
-
+    /**
+     * Retrieves a folder targeted by the given relative path
+     * @param root the root cloud folder
+     * @param relativePath the complete path from the root to the targeted folder
+     * @param createIfNotExists create the folder and/or its parent if they does not exists on the distant storage
+     * */
     def getFolder(root: FileStoreFolder, relativePath: String, createIfNotExists: Boolean): FileStoreFolder = {
         getItem(root, relativePath, createIfNotExists) match {
             case folder: FileStoreFolder => folder
@@ -58,6 +60,12 @@ object CommandUtils {
         }
     }
 
+    /**
+     * Retrieves a folder targeted by the given relative path
+     * @param root the root cloud folder
+     * @param relativePath the complete path from the root to the targeted item
+     * @param createIfNotExists create the item and/or its parent folders if they does not exists on the distant storage
+     * */
     def getItem(root: FileStoreFolder, relativePath: String, createIfNotExists: Boolean): FileStoreItem = {
         if (relativePath.isEmpty)
             return root
