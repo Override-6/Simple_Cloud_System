@@ -6,6 +6,14 @@ import java.nio.file.{Files, Path}
 
 object ServerMain {
 
+    /**
+     * Starts the client.
+     * @param args The program arguments. <br>
+     *             Accepted arguments are: <br>
+     *             -folder 'path' the folder in which users cloud space will be stored, default: "UserFiles/" <br>
+     *             --server-port 'port' the server's port default: 48483
+     *
+     * */
     def main(implicit args: Array[String]): Unit = {
         val workFolder = getWorkFolder(args).toAbsolutePath
         val port = getPort(args)
@@ -15,6 +23,10 @@ object ServerMain {
         server.startServer()
         println("Server successfully started")
     }
+
+    /*
+    * Utility methods
+    * */
 
     private def getPort(implicit args: Array[String]): Int = {
         val port = getOrElse("--server-port", "48483").toInt

@@ -1,8 +1,8 @@
 package fr.overrride.scs.server.fs
 
-import fr.overrride.scs.common.fs.FSFHelper._
-import fr.overrride.scs.common.fs.PathOps.SuperPath
-import fr.overrride.scs.common.fs.{FileStoreFile, FileStoreFolder, FileStoreItem, FileStoreItemInfo}
+import fr.overrride.scs.common.fs.CloudFolderHelper._
+import fr.overrride.scs.common.fs.PathOps.AppendPath
+import fr.overrride.scs.common.fs.{CloudFile, CloudFolder, CloudItem, CloudItemInfo}
 import fr.overrride.scs.common.packet.ObjectPacket
 import fr.overrride.scs.server.connection.{ClientConnection, ServerSideRemoteFileWriter}
 import fr.overrride.scs.stream.RemoteFileReader
@@ -10,11 +10,19 @@ import fr.overrride.scs.stream.RemoteFileReader
 import java.nio.file.{Files, Path}
 import scala.util.{Failure, Success, Try}
 
-class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)(implicit override val info: FileStoreItemInfo) extends FileStoreFolder {
+/**
+ * Represents the folder of a client's cloud space.
+ * A [[ServerSideCloudFolder]] only answers to requests and perform actions on the file system
+ * */
+class ServerSideCloudFolder(connection: ClientConnection, currentPath: Path)(implicit override val info: CloudItemInfo) extends CloudFolder {
 
     private val in            = connection.in
     private val out           = connection.out
     private val clientAddress = connection.clientAddress
+
+    /**
+     * @see [[CloudFolder]] for documentation
+     * */
 
     override def createFile(name: String): Unit = {
         Files.createFile(currentPath / name)
@@ -60,25 +68,25 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
         transferFolder(folderName, source)(_.uploadFile(_, _))
     }
 
-    override def findItem(name: String): Option[FileStoreItem] = {
+    override def findItem(name: String): Option[CloudItem] = {
         val path = currentPath / name
         if (Files.notExists(path)) {
             return None
         }
         val relativePath: String = relativize(name)
-        val subInfo              = FileStoreItemInfo(relativePath, Files.isDirectory(path), Files.getLastModifiedTime(path).toMillis)
+        val subInfo              = CloudItemInfo(relativePath, Files.isDirectory(path), Files.getLastModifiedTime(path).toMillis)
         val item                 = infoToItem(subInfo)
         Some(item)
     }
 
-    override def getAvailableItems: Array[FileStoreItem] = {
+    override def getAvailableItems: Array[CloudItem] = {
         Files.list(currentPath)
                 .toArray[Path](new Array[Path](_))
                 .map { path =>
                     val name         = path.getFileName.toString
                     val relativePath = relativize(name)
                     val lastModified = Files.getLastModifiedTime(path).toMillis
-                    infoToItem(FileStoreItemInfo(relativePath, Files.isDirectory(path), lastModified))
+                    infoToItem(CloudItemInfo(relativePath, Files.isDirectory(path), lastModified))
                 }
     }
 
@@ -91,16 +99,16 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
         out.writePacket(ObjectPacket(Some(msg)))
     }
 
-    private def infoToItem(info: FileStoreItemInfo): FileStoreItem = {
+    private def infoToItem(info: CloudItemInfo): CloudItem = {
         if (info.isFolder)
-            new ServerSideFileStoreFolder(connection, currentPath / info.relativePath)(info)
+            new ServerSideCloudFolder(connection, currentPath / info.relativePath)(info)
         else
-            new FileStoreFile(info)
+            new CloudFile(info)
     }
 
-    private def transferFolder(folderName: String, path: Path)(transferFile: (FileStoreFolder, String, Path) => Unit): Unit = {
+    private def transferFolder(folderName: String, path: Path)(transferFile: (CloudFolder, String, Path) => Unit): Unit = {
         val remotePath = relativize(folderName)
-        val subFolder  = new ServerSideFileStoreFolder(connection, currentPath / folderName)(FileStoreItemInfo(remotePath, isFolder = true))
+        val subFolder  = new ServerSideCloudFolder(connection, currentPath / folderName)(CloudItemInfo(remotePath, isFolder = true))
         subFolder.getAvailableItems.foreach(folderItem => {
             val info     = folderItem.info
             val itemPath = info.relativePath
