@@ -81,7 +81,7 @@ val serverDestination = serverStatics[Path].of("/MyDistantFile.txt")
 val sourceFileOut = Files.newOutputStream(Path.of("MySourceFile.txt"))
 serverStatics[Files].write(sourceFileOut)
 ```
-You can also imagine a segmented option or using this system for uploading/downloading folders.  
+You can also imagine a segmented algorythmn, or using this system for uploading/downloading folders.  
 Here is a remote event feature that could be added in two seconds using Linkit :
 ```scala
 serverEngine = network.getEngine("CloudServer")
