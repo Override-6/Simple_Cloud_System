@@ -1,6 +1,6 @@
 package fr.overrride.scs.stream
 
-import fr.overrride.scs.common.fs.FileStoreItemInfo
+import fr.overrride.scs.common.fs.CloudItemInfo
 import fr.overrride.scs.common.packet.exception.{FileCollapseException, UnexpectedPacketException}
 import fr.overrride.scs.common.packet.{EOFPacket, FileSegmentPacket, ObjectPacket}
 
@@ -18,7 +18,7 @@ class RemoteFileReader(in: PacketInputStream) {
         read
     }
 
-    private def readFileContent(out: OutputStream, info: FileStoreItemInfo): Int = {
+    private def readFileContent(out: OutputStream, info: CloudItemInfo): Int = {
         var next  = in.readPacket()
         var total = 0
         val path  = info.relativePath
@@ -42,10 +42,10 @@ class RemoteFileReader(in: PacketInputStream) {
         out.write(segment)
     }
 
-    private def nextFileInfo(): FileStoreItemInfo = {
+    private def nextFileInfo(): CloudItemInfo = {
         in.readPacket() match {
-            case ObjectPacket(info: FileStoreItemInfo) => info
-            case other                                 =>
+            case ObjectPacket(info: CloudItemInfo) => info
+            case other                             =>
                 throw new UnexpectedPacketException(s"Received unexpected packet of type ${other.getClass.getName}, expected ObjectPacket(FileStoreItemInfo).")
         }
     }

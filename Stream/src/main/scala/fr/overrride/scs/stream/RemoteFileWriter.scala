@@ -1,6 +1,6 @@
 package fr.overrride.scs.stream
 
-import fr.overrride.scs.common.fs.FileStoreItemInfo
+import fr.overrride.scs.common.fs.CloudItemInfo
 import fr.overrride.scs.common.packet.{EOFPacket, FileSegmentPacket, ObjectPacket}
 import fr.overrride.scs.stream.RemoteFileWriter.SegmentSize
 
@@ -14,7 +14,7 @@ class RemoteFileWriter(out: PacketOutputStream) {
         writeFileContent(source, info)
     }
 
-    private def writeFileContent(source: Path, info: FileStoreItemInfo): Unit = {
+    private def writeFileContent(source: Path, info: CloudItemInfo): Unit = {
         val in      = Files.newInputStream(source)
         val size    = Math.min(in.available(), SegmentSize)
         var content = readContent(in, size)
@@ -35,8 +35,8 @@ class RemoteFileWriter(out: PacketOutputStream) {
         result
     }
 
-    private def writeFileInfo(file: Path, remotePath: String): FileStoreItemInfo = {
-        val info = FileStoreItemInfo(remotePath, Files.isDirectory(file), Files.getLastModifiedTime(file).toMillis)
+    private def writeFileInfo(file: Path, remotePath: String): CloudItemInfo = {
+        val info = CloudItemInfo(remotePath, Files.isDirectory(file), Files.getLastModifiedTime(file).toMillis)
         out.writePacket(ObjectPacket(info))
         info
     }
