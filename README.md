@@ -21,7 +21,7 @@ CLI was chosen in order to keep the application simple, and because i had only t
 `Java 16`  
 `Scala-v2.13.6`  
 `BouncyCastle-v1.69` (for encryption)  
-`snakeyaml` (for the `organization.yaml` file parsing`  
+`snakeyaml` (for the `organization.yaml` file parsing)  
 
 ## How to start
 The project consists of two executable parts : The client and the server  
