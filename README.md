@@ -91,7 +91,7 @@ serverStatics[Path].of("MyDistantFile.txt").register(serverWatchService)
 while (true) {
    val key = service.poll()
    key.pollEvents().forEach { event =>
-      println(s"Event $event for path : ${key.watchable()}")
+      println(s"Remote event $event for cloud path : ${key.watchable()}")
       doSomeStuffWithTheDistantEvent(event)
    }
 }
