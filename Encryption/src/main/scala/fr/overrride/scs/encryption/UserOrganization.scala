@@ -5,6 +5,9 @@ import org.yaml.snakeyaml.Yaml
 import java.io.{InputStream, OutputStream}
 import java.util
 
+/**
+ * Represents a user's organisation
+ * */
 case class UserOrganization(name: String,
                             organizationalUnit: String,
                             organization: String,
@@ -12,10 +15,14 @@ case class UserOrganization(name: String,
                             state: String,
                             countryCode: String) {
 
+    /**
+     * Writes the UserOrganization fields in the output stream
+     * */
     def writeData(out: OutputStream): Unit = {
         def write(str: String): Unit = {
             out.write((str + "\n").getBytes())
         }
+
         write(name)
         write(organizationalUnit)
         write(organization)
@@ -30,8 +37,13 @@ case class UserOrganization(name: String,
 
 object UserOrganization {
 
+    private final val Yml = new Yaml()
+
+    /**
+     * Creates a [[UserOrganization]] object from yaml
+     * */
     def fromYaml(inputStream: InputStream): UserOrganization = {
-        val map = new Yaml().load[util.HashMap[String, String]](inputStream)
+        val map = Yml.load[util.HashMap[String, String]](inputStream)
         import map.get
         val name               = get("name")
         val organizationalUnit = get("organizationalUnit")
