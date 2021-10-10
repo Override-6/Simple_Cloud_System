@@ -109,7 +109,7 @@ describe class java.nio.file.Path {
                //The modifier will modify the `str` argument of the method, and the resulting argument will be 
                //the concatenation of the engine's cloud root folder + the original argument.
                //This way, if a malicious client tries to access "/System32/", the modifier will change the path to something like :
-               // "D:/CloudStorage/Engine1/System32". So like this, we can avoid malicious code injurings
+               //"D:/CloudStorage/Engine1/System32". So like this, we can avoid malicious code injurings
                modifier for remote -> ${(arg, engineID, engineProperties) => engineProperties("cloud_root_folder") + "/" + arg}
            }
        }
