@@ -4,8 +4,8 @@ import fr.overrride.scs.common.fs.FSFHelper._
 import fr.overrride.scs.common.fs.PathOps.SuperPath
 import fr.overrride.scs.common.fs.{FileStoreFile, FileStoreFolder, FileStoreItem, FileStoreItemInfo}
 import fr.overrride.scs.common.packet.ObjectPacket
-import fr.overrride.scs.server.connection.ClientConnection
-import fr.overrride.scs.stream.{RemoteFileReader, RemoteFileWriter}
+import fr.overrride.scs.server.connection.{ClientConnection, ServerSideRemoteFileWriter}
+import fr.overrride.scs.stream.RemoteFileReader
 
 import java.nio.file.{Files, Path}
 import scala.util.{Failure, Success, Try}
@@ -16,7 +16,17 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
     private val out           = connection.out
     private val clientAddress = connection.clientAddress
 
-    override def uploadFile(name: String, source: Path, segmentSize: Int): Unit = {
+    override def createFile(name: String): Unit = {
+        Files.createFile(currentPath / name)
+        sendRequestAccepted()
+    }
+
+    override def createFolder(name: String): Unit = {
+        Files.createDirectory(currentPath / name)
+        sendRequestAccepted()
+    }
+
+    override def uploadFile(name: String, source: Path): Unit = {
         Try(ensureFile(source, false)) match {
             case Failure(e) =>
                 sendRequestRefused(name, e.getMessage)
@@ -24,8 +34,8 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
                 sendRequestAccepted()
                 val relativePath = relativize(name)
                 println(s"Client $clientAddress is downloading file $relativePath...")
-                val writer = new RemoteFileWriter(out)
-                writer.writeFile(source, relativePath, segmentSize)
+                val writer = new ServerSideRemoteFileWriter(out)
+                writer.writeFile(source, relativePath)
         }
 
     }
@@ -46,18 +56,18 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
         transferFolder(folderName, dest)(_.downloadFile(_, _))
     }
 
-    override def uploadFolder(folderName: String, source: Path, segmentSize: Int): Unit = {
-        transferFolder(folderName, source)(_.uploadFile(_, _, segmentSize))
+    override def uploadFolder(folderName: String, source: Path): Unit = {
+        transferFolder(folderName, source)(_.uploadFile(_, _))
     }
 
     override def findItem(name: String): Option[FileStoreItem] = {
-        val path                 = currentPath / name
+        val path = currentPath / name
         if (Files.notExists(path)) {
             return None
         }
         val relativePath: String = relativize(name)
-        val subInfo = FileStoreItemInfo(relativePath, Files.isDirectory(path), Files.getLastModifiedTime(path).toMillis)
-        val item    = infoToItem(subInfo)
+        val subInfo              = FileStoreItemInfo(relativePath, Files.isDirectory(path), Files.getLastModifiedTime(path).toMillis)
+        val item                 = infoToItem(subInfo)
         Some(item)
     }
 

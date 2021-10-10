@@ -2,7 +2,7 @@ package fr.overrride.scs.server.connection
 
 import fr.overrride.scs.common.fs.PathOps.SuperPath
 import fr.overrride.scs.common.fs.{FileStoreFolder, FileStoreItemInfo}
-import fr.overrride.scs.common.packet.request.{FileDownloadRequest, FileStoreFolderContentRequest, FileStoreItemRequest, FileUploadRequest}
+import fr.overrride.scs.common.packet.request._
 import fr.overrride.scs.common.packet.{ObjectPacket, Packet}
 import fr.overrride.scs.server.fs.ServerSideFileStoreFolder
 import fr.overrride.scs.stream.{PacketInputStream, PacketOutputStream}
@@ -21,10 +21,10 @@ class ClientConnection(socket: Socket, storeFolderPath: Path, server: CloudServe
     private[server] val out = new PacketOutputStream(socket.getOutputStream)
 
     override def close(): Unit = {
-        println(s"Disconnecting client $clientAddress")
         socket.close()
         open = false
         closed = true
+        println(s"Disconnected client $clientAddress")
     }
 
     def startReception(): Unit = {
@@ -55,6 +55,10 @@ class ClientConnection(socket: Socket, storeFolderPath: Path, server: CloudServe
     }
 
     def handlePacket(packet: Packet): Unit = packet match {
+        case CreateItemRequest(relativePath, isFolder)   =>
+            val store = getStore(relativePath, true)
+            if (isFolder) store.createFolder(extractFileName(relativePath))
+            else store.createFile(extractFileName(relativePath))
         case FileDownloadRequest(relativePath)           =>
             getStore(relativePath, true)
                     .downloadFile(extractFileName(relativePath), storeFolderPath / relativePath)
