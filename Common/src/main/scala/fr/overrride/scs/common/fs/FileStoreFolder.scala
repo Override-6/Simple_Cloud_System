@@ -4,11 +4,15 @@ import java.nio.file.Path
 
 trait FileStoreFolder extends FileStoreItem {
 
-    def uploadFolder(folderName: String, source: Path, segmentSize: Int = 150000): Unit
+    def createFile(name: String): Unit
+
+    def createFolder(name: String): Unit
+
+    def uploadFolder(folderName: String, source: Path): Unit
 
     def downloadFolder(folderName: String, dest: Path): Unit
 
-    def uploadFile(name: String, source: Path, segmentSize: Int = 150000): Unit
+    def uploadFile(name: String, source: Path): Unit
 
     def downloadFile(name: String, dest: Path): Unit
 
