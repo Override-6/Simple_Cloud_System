@@ -1,5 +1,6 @@
 package fr.overrride.scs.common.packet.exception
 
-class PacketException(msg: String, cause: Throwable = null) extends Exception(msg, cause) {
-
-}
+/**
+ * base class for all exceptions that concerns packet traffic
+ * */
+class PacketException(msg: String, cause: Throwable = null) extends Exception(msg, cause)

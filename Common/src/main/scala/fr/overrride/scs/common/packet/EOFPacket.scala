@@ -1,5 +1,6 @@
 package fr.overrride.scs.common.packet
 
-object EOFPacket extends Packet {
-
-}
+/**
+ * End Of File for packet transfert
+ */
+object EOFPacket extends Packet
