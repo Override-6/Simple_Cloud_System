@@ -90,10 +90,10 @@ class ClientConnection(socket: Socket, storeFolderPath: Path, server: CloudServe
     }
 
     private def getStore(relativePath: String, stopAtParent: Boolean): FileStoreFolder = {
-        val relPath      = if (stopAtParent) relativePath.drop(relativePath.lastIndexOf('/')) else relativePath
+        val relPath      = if (stopAtParent) relativePath.take(relativePath.lastIndexOf('/')) else relativePath
         val path         = storeFolderPath / relPath
         val lastModified = if (Files.exists(path)) Files.getLastModifiedTime(path).toMillis else -1
-        val info         = FileStoreItemInfo(relativePath, true, lastModified)
+        val info         = FileStoreItemInfo(relPath, true, lastModified)
         new ServerSideFileStoreFolder(this, path)(info)
     }
 }

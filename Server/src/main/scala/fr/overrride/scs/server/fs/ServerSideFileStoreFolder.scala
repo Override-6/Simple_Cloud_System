@@ -22,9 +22,10 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
                 sendRequestRefused(name, e.getMessage)
             case Success(_) =>
                 sendRequestAccepted()
-                println(s"Client $clientAddress is downloading file ${currentPath / name}...")
+                val relativePath = relativize(name)
+                println(s"Client $clientAddress is downloading file $relativePath...")
                 val writer = new RemoteFileWriter(out)
-                writer.writeFile(source, relativize(name), segmentSize)
+                writer.writeFile(source, relativePath, segmentSize)
         }
 
     }
@@ -50,11 +51,11 @@ class ServerSideFileStoreFolder(connection: ClientConnection, currentPath: Path)
     }
 
     override def findItem(name: String): Option[FileStoreItem] = {
-        val relativePath: String = relativize(name)
-        val path                 = currentPath / relativePath
+        val path                 = currentPath / name
         if (Files.notExists(path)) {
             return None
         }
+        val relativePath: String = relativize(name)
         val subInfo = FileStoreItemInfo(relativePath, Files.isDirectory(path), Files.getLastModifiedTime(path).toMillis)
         val item    = infoToItem(subInfo)
         Some(item)
