@@ -23,6 +23,13 @@ object FSFHelper {
             throw new IllegalArgumentException(s"path $path is not a folder.")
     }
 
-    def relativize(fileName: String)(implicit info: FileStoreItemInfo): String = info.relativePath + "/" + fileName
+    def relativize(fileName: String)(implicit info: FileStoreItemInfo): String = {
+        val path = info.relativePath
+        val name = fileName.dropWhile(_ == '/')
+        if (path.endsWith("/"))
+            path + name
+        else
+            path + "/" + name
+    }
 
 }
