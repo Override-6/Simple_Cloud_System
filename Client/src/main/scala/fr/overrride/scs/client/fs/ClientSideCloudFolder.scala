@@ -20,6 +20,9 @@ class ClientSideCloudFolder(client: CloudClient)(implicit override val info: Clo
     private val out = client.getPacketOutputStream
     private val in  = client.getPacketInputStream
 
+    /**
+     * @see [[CloudFolder]] for documentation
+     * */
 
     override def createFile(name: String): Unit = {
         makeRequest(CreateItemRequest(_, false), name) {}
