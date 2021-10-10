@@ -51,24 +51,28 @@ object CommandUtils {
         throw CommandException(s"Missing argument '$name=?', " + usage)
     }
 
-    def getFolder(root: FileStoreFolder, relativePath: String): FileStoreFolder = {
-        getItem(root, relativePath) match {
+    def getFolder(root: FileStoreFolder, relativePath: String, createIfNotExists: Boolean): FileStoreFolder = {
+        getItem(root, relativePath, createIfNotExists) match {
             case folder: FileStoreFolder => folder
             case _                       => throw CommandException(s"$relativePath is not a folder.")
         }
     }
 
-    def getItem(root: FileStoreFolder, relativePath: String): FileStoreItem = {
+    def getItem(root: FileStoreFolder, relativePath: String, createIfNotExists: Boolean): FileStoreItem = {
         if (relativePath.isEmpty)
             return root
         val names                   = PathRegex.split(relativePath.dropWhile(_ == '/'))
         var folder: FileStoreFolder = root
         val len                     = names.length
         for (i <- names.indices) {
-            folder.findItem(names(i)) match {
-                case None        =>
-                    throw CommandException(s"Folder ${names.take(i).mkString("/")} does not exists.")
-                case Some(value) =>
+            val name = names(i)
+            folder.findItem(name) match {
+                case None if createIfNotExists =>
+                    if (i == len && name.contains('.')) folder.createFile(name)
+                    else folder.createFolder(name)
+                case None                      =>
+                    throw CommandException(s"Folder|file ${names.mkString("/")} does not exists.")
+                case Some(value)               =>
                     value match {
                         case f: FileStoreFolder                   => folder = f
                         case other: FileStoreItem if i == len - 1 =>

@@ -2,14 +2,15 @@ package fr.overrride.scs.client.connection
 
 import fr.overrride.scs.client.fs.ClientSideFileStoreFolder
 import fr.overrride.scs.common.fs.FileStoreItemInfo
+import fr.overrride.scs.encryption.UserSecrets
 import fr.overrride.scs.stream.{PacketInputStream, PacketOutputStream}
 
 import java.net.Socket
 
-class CloudClient(socket: Socket) {
+class CloudClient(socket: Socket, val secrets: UserSecrets) {
 
-    private var open                          = true
-    private[connection] val clientThreadGroup = new ThreadGroup("Client Thread Group")
+    private var open                             = true
+    private[connection] val clientThreadGroup    = new ThreadGroup("Client Thread Group")
     private var store: ClientSideFileStoreFolder = _
 
     private val pos = new PacketOutputStream(socket.getOutputStream)
@@ -34,7 +35,6 @@ class CloudClient(socket: Socket) {
         open = true
         store = new ClientSideFileStoreFolder(this)(FileStoreItemInfo("/", isFolder = true, -1))
     }
-
 
     @inline
     private def ensureOpen(): Unit = {

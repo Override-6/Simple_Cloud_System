@@ -14,7 +14,7 @@ class LSExecutor(client: CloudClient) extends CommandExecutor {
 
     override def execute(implicit args: Array[String]): Unit = {
         val dir    = args.headOption.getOrElse("/")
-        val folder = CommandUtils.getFolder(store, dir)
+        val folder = CommandUtils.getFolder(store, dir, false)
         printFolder(folder)
     }
 

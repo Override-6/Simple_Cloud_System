@@ -17,7 +17,7 @@ class UploadExecutor(client: CloudClient) extends CommandExecutor {
         var lastIndex = targetItem.lastIndexOf("/")
         if (lastIndex == -1) lastIndex = targetItem.length
         val itemName  = targetItem.drop(lastIndex)
-        val parent    = CommandUtils.getFolder(store, itemName)
+        val parent    = CommandUtils.getFolder(store, itemName, true)
         if (Files.notExists(source))
             throw CommandException(s"source $source does not exists.")
         if (Files.isDirectory(source)) {
@@ -27,6 +27,7 @@ class UploadExecutor(client: CloudClient) extends CommandExecutor {
         }
         println("Uploading done !")
     }
+
 
     private def checkArgs(implicit args: Array[String]): Unit = {
         if (args.length != 3)

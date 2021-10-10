@@ -16,7 +16,7 @@ class DownloadExecutor(client: CloudClient) extends CommandExecutor {
         val destination = Path.of(CommandUtils.argAfter("-dest"))
 
         val lastIndex = targetItem.lastIndexOf("/")
-        val parent    = CommandUtils.getFolder(store, targetItem.take(lastIndex))
+        val parent    = CommandUtils.getFolder(store, targetItem.take(lastIndex), false)
         val itemName  = targetItem.drop(lastIndex)
         val item      = parent.findItem(targetItem.drop(lastIndex)).getOrElse(throw CommandException(s"$targetItem does not exists."))
         item match {

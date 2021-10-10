@@ -7,7 +7,6 @@ import fr.overrride.scs.common.fs._
 import fr.overrride.scs.common.packet.exception.UnexpectedPacketException
 import fr.overrride.scs.common.packet.request._
 import fr.overrride.scs.common.packet.{ObjectPacket, Packet}
-import fr.overrride.scs.stream.{RemoteFileReader, RemoteFileWriter}
 
 import java.nio.file.{Files, Path}
 
@@ -16,6 +15,13 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
     private val out = client.getPacketOutputStream
     private val in  = client.getPacketInputStream
 
+    override def createFile(name: String): Unit = {
+        makeRequest(CreateItemRequest(_, false), name) {}
+    }
+
+    override def createFolder(name: String): Unit = {
+        makeRequest(CreateItemRequest(_, true), name) {}
+    }
 
     override def getAvailableItems: Array[FileStoreItem] = {
         makeRequest(FileStoreFolderContentRequest) {
@@ -39,18 +45,18 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
 
     override def downloadFile(name: String, dest: Path): Unit = {
         ensureFile(dest)
-        println(s"Uploading downloading file ${relativize(name)}...")
+        println(s"Downloading file ${relativize(name)}...")
         makeRequest(FileUploadRequest, name) {
-            new RemoteFileReader(in).readFile(dest)
+            new ClientSideRemoteFileReader(client.secrets, in).readFile(dest)
         }
     }
 
-    override def uploadFile(name: String, source: Path, segmentSize: Int): Unit = {
+    override def uploadFile(name: String, source: Path): Unit = {
         ensureFile(source)
         println(s"Uploading file $source...")
         makeRequest(FileDownloadRequest, name) {
             val remotePath = relativize(name)
-            new RemoteFileWriter(out).writeFile(source, remotePath, segmentSize)
+            new ClientSideRemoteFileWriter(client.secrets, out).writeFile(source, remotePath)
         }
     }
 
@@ -58,7 +64,7 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
         ensureFolder(dest)
         val remotePath = relativize(folderName)
         println(s"Downloading folder $remotePath...")
-        val subFolder  = new ClientSideFileStoreFolder(client)(FileStoreItemInfo(remotePath, isFolder = true))
+        val subFolder = new ClientSideFileStoreFolder(client)(FileStoreItemInfo(remotePath, isFolder = true))
         subFolder.getAvailableItems.foreach(folderItem => {
             val info     = folderItem.info
             val itemPath = info.relativePath
@@ -72,11 +78,11 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
         })
     }
 
-    override def uploadFolder(folderName: String, source: Path, segmentSize: Int): Unit = {
+    override def uploadFolder(folderName: String, source: Path): Unit = {
         ensureFolder(source)
         val remotePath = relativize(folderName)
         println(s"Uploading folder $source...")
-        val subFolder  = new ClientSideFileStoreFolder(client)(FileStoreItemInfo(remotePath, isFolder = true))
+        val subFolder = new ClientSideFileStoreFolder(client)(FileStoreItemInfo(remotePath, isFolder = true))
         Files.list(source)
                 .forEach(path => {
                     val name = path.getFileName.toString
@@ -94,7 +100,7 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
             case ObjectPacket(possibleErrorMsg: Option[String]) =>
                 possibleErrorMsg match {
                     case None           => onAccepted
-                    case Some(errorMsg) => throw new FileTransferException(s"Could not perform file transfer '$fileName' from server : $errorMsg")
+                    case Some(errorMsg) => throw new FileTransferException(s"Could not perform request '$packet' from server : $errorMsg")
                 }
 
             case other => throw new UnexpectedPacketException(s"Received unexpected packet $other, expected ObjectPacket(Option[String]).")
