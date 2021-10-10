@@ -20,9 +20,13 @@ class DownloadExecutor(client: CloudClient) extends CommandExecutor {
         val itemName  = targetItem.drop(lastIndex)
         val item      = parent.findItem(targetItem.drop(lastIndex)).getOrElse(throw CommandException(s"$targetItem does not exists."))
         item match {
-            case _: FileStoreFile   => parent.downloadFile(itemName, destination)
-            case _: FileStoreFolder => parent.downloadFolder(itemName, destination)
+            case _: FileStoreFile   =>
+                println(s"Downloading file $itemName to server into $destination.")
+                parent.downloadFile(itemName, destination)
+            case _: FileStoreFolder =>
+                parent.downloadFolder(itemName, destination)
         }
+        println("Download done !")
     }
 
     private def checkArgs(implicit args: Array[String]): Unit = {

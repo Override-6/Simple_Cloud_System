@@ -2,7 +2,6 @@ package fr.overrride.scs.client.command.commands
 
 import fr.overrride.scs.client.command.{CommandException, CommandExecutor, CommandUtils}
 import fr.overrride.scs.client.connection.CloudClient
-import fr.overrride.scs.common.fs.{FileStoreFile, FileStoreFolder}
 
 import java.nio.file.{Files, Path}
 
@@ -15,16 +14,17 @@ class UploadExecutor(client: CloudClient) extends CommandExecutor {
         val targetItem = CommandUtils.argAfter("-dest")
         val source     = Path.of(args.head)
 
-        val lastIndex = targetItem.lastIndexOf("/")
-        val parent    = CommandUtils.getFolder(store, targetItem.take(lastIndex))
+        var lastIndex = targetItem.lastIndexOf("/")
+        if (lastIndex == -1) lastIndex = targetItem.length
         val itemName  = targetItem.drop(lastIndex)
+        val parent    = CommandUtils.getFolder(store, itemName)
         if (Files.notExists(source))
             throw CommandException(s"source $source does not exists.")
-        println(s"Uploading file $source to server as '$targetItem'.")
-        if (Files.isDirectory(source))
-            parent.uploadFolder(itemName, source)
-        else
-            parent.uploadFile(itemName, source)
+        if (Files.isDirectory(source)) {
+            parent.uploadFolder(targetItem, source)
+        } else {
+            parent.uploadFile(targetItem, source)
+        }
         println("Uploading done !")
     }
 

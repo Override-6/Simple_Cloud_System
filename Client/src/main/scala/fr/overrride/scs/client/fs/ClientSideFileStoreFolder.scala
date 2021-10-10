@@ -9,12 +9,13 @@ import fr.overrride.scs.common.packet.request._
 import fr.overrride.scs.common.packet.{ObjectPacket, Packet}
 import fr.overrride.scs.stream.{RemoteFileReader, RemoteFileWriter}
 
-import java.nio.file.Path
+import java.nio.file.{Files, Path}
 
 class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info: FileStoreItemInfo) extends FileStoreFolder {
 
     private val out = client.getPacketOutputStream
     private val in  = client.getPacketInputStream
+
 
     override def getAvailableItems: Array[FileStoreItem] = {
         makeRequest(FileStoreFolderContentRequest) {
@@ -38,6 +39,7 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
 
     override def downloadFile(name: String, dest: Path): Unit = {
         ensureFile(dest)
+        println(s"Uploading downloading file ${relativize(name)}...")
         makeRequest(FileUploadRequest, name) {
             new RemoteFileReader(in).readFile(dest)
         }
@@ -45,6 +47,7 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
 
     override def uploadFile(name: String, source: Path, segmentSize: Int): Unit = {
         ensureFile(source)
+        println(s"Uploading file $source...")
         makeRequest(FileDownloadRequest, name) {
             val remotePath = relativize(name)
             new RemoteFileWriter(out).writeFile(source, remotePath, segmentSize)
@@ -53,12 +56,35 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
 
     override def downloadFolder(folderName: String, dest: Path): Unit = {
         ensureFolder(dest)
-        transferFolder(folderName, dest)(_.downloadFile(_, _))
+        val remotePath = relativize(folderName)
+        println(s"Downloading folder $remotePath...")
+        val subFolder  = new ClientSideFileStoreFolder(client)(FileStoreItemInfo(remotePath, isFolder = true))
+        subFolder.getAvailableItems.foreach(folderItem => {
+            val info     = folderItem.info
+            val itemPath = info.relativePath
+            val itemName = itemPath.drop(itemPath.lastIndexOf('/'))
+            val itemDest = dest / itemName
+            if (info.isFolder) {
+                subFolder.downloadFolder(itemName, itemDest)
+            } else {
+                subFolder.downloadFile(itemName, itemDest)
+            }
+        })
     }
 
     override def uploadFolder(folderName: String, source: Path, segmentSize: Int): Unit = {
         ensureFolder(source)
-        transferFolder(folderName, source)(_.uploadFile(_, _, segmentSize))
+        val remotePath = relativize(folderName)
+        println(s"Uploading folder $source...")
+        val subFolder  = new ClientSideFileStoreFolder(client)(FileStoreItemInfo(remotePath, isFolder = true))
+        Files.list(source)
+                .forEach(path => {
+                    val name = path.getFileName.toString
+                    if (Files.isDirectory(path))
+                        subFolder.uploadFolder(name, path)
+                    else
+                        subFolder.uploadFile(name, path)
+                })
     }
 
     private def makeRequest[T](requestPacket: String => Packet, fileName: String = "")(onAccepted: => T): T = {
@@ -80,22 +106,6 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
             new ClientSideFileStoreFolder(client)(info)
         else
             new FileStoreFile(info)
-    }
-
-    private def transferFolder(folderName: String, path: Path)(transferFile: (FileStoreFolder, String, Path) => Unit): Unit = {
-        val remotePath = relativize(folderName)
-        val subFolder  = new ClientSideFileStoreFolder(client)(FileStoreItemInfo(remotePath, isFolder = true))
-        subFolder.getAvailableItems.foreach(folderItem => {
-            val info     = folderItem.info
-            val itemPath = info.relativePath
-            val itemDest = path / folderName
-            val itemName = itemPath.drop(itemPath.lastIndexOf('/'))
-            if (info.isFolder) {
-                subFolder.transferFolder(itemName, itemDest)(transferFile)
-            } else {
-                transferFile(subFolder, itemName, itemDest)
-            }
-        })
     }
 
 }

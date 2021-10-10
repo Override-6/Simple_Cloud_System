@@ -15,7 +15,11 @@ package fr.overrride.scs.client.command
 
 import fr.overrride.scs.common.fs.{FileStoreFolder, FileStoreItem}
 
+import java.util.regex.Pattern
+
 object CommandUtils {
+
+    private val PathRegex = Pattern.compile("[/\\\\]+")
 
     @throws[CommandException]("if expected argument not found in provided args.")
     def ensureArgsContains(expected: String*)(implicit args: Array[String]): Unit = {
@@ -55,7 +59,9 @@ object CommandUtils {
     }
 
     def getItem(root: FileStoreFolder, relativePath: String): FileStoreItem = {
-        val names                   = relativePath.split("/")
+        if (relativePath.isEmpty)
+            return root
+        val names                   = PathRegex.split(relativePath.dropWhile(_ == '/'))
         var folder: FileStoreFolder = root
         val len                     = names.length
         for (i <- names.indices) {
