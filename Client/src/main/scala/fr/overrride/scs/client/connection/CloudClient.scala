@@ -1,7 +1,7 @@
 package fr.overrride.scs.client.connection
 
-import fr.overrride.scs.client.fs.ClientSideFileStoreFolder
-import fr.overrride.scs.common.fs.FileStoreItemInfo
+import fr.overrride.scs.client.fs.ClientSideCloudFolder
+import fr.overrride.scs.common.fs.CloudItemInfo
 import fr.overrride.scs.encryption.UserSecrets
 import fr.overrride.scs.stream.{PacketInputStream, PacketOutputStream}
 
@@ -12,11 +12,11 @@ import java.net.Socket
  * */
 class CloudClient(socket: Socket, val secrets: UserSecrets) {
 
-    private var open                             = true
+    private var open                         = true
     /**
      * The connection's cloud folder root.
      * */
-    private var store: ClientSideFileStoreFolder = _
+    private var cloud: ClientSideCloudFolder = _
 
     private val pos = new PacketOutputStream(socket.getOutputStream)
     private val pis = new PacketInputStream(socket.getInputStream)
@@ -39,17 +39,17 @@ class CloudClient(socket: Socket, val secrets: UserSecrets) {
     /**
      * @return The connection's cloud folder root.
      * */
-    def getRootStore: ClientSideFileStoreFolder = {
+    def getRootStore: ClientSideCloudFolder = {
         ensureOpen()
-        store
+        cloud
     }
 
     /**
-     * Starts the client, initialises the [[ClientSideFileStoreFolder]]
+     * Starts the client, initialises the [[ClientSideCloudFolder]]
      * */
     def startClient(): Unit = {
         open = true
-        store = new ClientSideFileStoreFolder(this)(FileStoreItemInfo("/", isFolder = true, -1))
+        cloud = new ClientSideCloudFolder(this)(CloudItemInfo("/", isFolder = true, -1))
     }
 
     @inline

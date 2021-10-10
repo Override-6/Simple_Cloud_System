@@ -11,7 +11,7 @@ import java.nio.file.{Files, Path}
  */
 class UploadExecutor(client: CloudClient) extends CommandExecutor {
 
-    private val store = client.getRootStore
+    private val cloud = client.getRootStore
 
     /**
      * Syntax: upload "source" -dest "destination"
@@ -31,7 +31,7 @@ class UploadExecutor(client: CloudClient) extends CommandExecutor {
         var lastIndex = targetItem.lastIndexOf("/")
         if (lastIndex == -1) lastIndex = targetItem.length
         val itemName  = targetItem.drop(lastIndex)
-        val parent    = CommandUtils.getFolder(store, itemName, true)
+        val parent    = CommandUtils.getFolder(cloud, itemName, true)
         if (Files.notExists(source))
             throw CommandException(s"source $source does not exists.")
         if (Files.isDirectory(source)) {

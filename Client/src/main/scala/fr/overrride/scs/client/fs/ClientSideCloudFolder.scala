@@ -1,8 +1,8 @@
 package fr.overrride.scs.client.fs
 
 import fr.overrride.scs.client.connection.CloudClient
-import fr.overrride.scs.common.fs.FSFHelper._
-import fr.overrride.scs.common.fs.PathOps.SuperPath
+import fr.overrride.scs.common.fs.CloudFolderHelper._
+import fr.overrride.scs.common.fs.PathOps.AppendPath
 import fr.overrride.scs.common.fs._
 import fr.overrride.scs.common.packet.exception.UnexpectedPacketException
 import fr.overrride.scs.common.packet.request._
@@ -14,7 +14,7 @@ import java.nio.file.{Files, Path}
  * This class represents a distant folder in the server's storage.
  * Most of the time, this class performs requests to the server.
  * */
-class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info: FileStoreItemInfo) extends FileStoreFolder {
+class ClientSideCloudFolder(client: CloudClient)(implicit override val info: CloudItemInfo) extends CloudFolder {
 
     //In/Out packet streams of the client
     private val out = client.getPacketOutputStream
@@ -29,22 +29,22 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
         makeRequest(CreateItemRequest(_, true), name) {}
     }
 
-    override def getAvailableItems: Array[FileStoreItem] = {
-        makeRequest(FileStoreFolderContentRequest) {
+    override def getAvailableItems: Array[CloudItem] = {
+        makeRequest(CloudFolderContentRequest) {
             in.readPacket() match {
-                case ObjectPacket(items: Array[FileStoreItemInfo]) =>
+                case ObjectPacket(items: Array[CloudItemInfo]) =>
                     items.map(infoToItem)
-                case other                                         =>
+                case other                                     =>
                     throw new UnexpectedPacketException(s"Received unexpected packet '$other', expected ObjectPacket(Array[FileStoreItemInfo])")
             }
         }
     }
 
-    override def findItem(name: String): Option[FileStoreItem] = {
-        out.writePacket(FileStoreItemRequest(relativize(name)))
+    override def findItem(name: String): Option[CloudItem] = {
+        out.writePacket(CloudItemRequest(relativize(name)))
         in.readPacket() match {
-            case ObjectPacket(opt: Option[FileStoreItemInfo]) => opt.map(infoToItem)
-            case o                                            =>
+            case ObjectPacket(opt: Option[CloudItemInfo]) => opt.map(infoToItem)
+            case o                                        =>
                 throw new UnexpectedPacketException(s"Received unexpected response '$o'.")
         }
     }
@@ -70,7 +70,7 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
         ensureFolder(dest)
         val remotePath = relativize(folderName)
         println(s"Downloading folder $remotePath...")
-        val subFolder = new ClientSideFileStoreFolder(client)(FileStoreItemInfo(remotePath, isFolder = true))
+        val subFolder = new ClientSideCloudFolder(client)(CloudItemInfo(remotePath, isFolder = true))
         subFolder.getAvailableItems.foreach(folderItem => {
             val info     = folderItem.info
             val itemPath = info.relativePath
@@ -88,7 +88,7 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
         ensureFolder(source)
         val remotePath = relativize(folderName)
         println(s"Uploading folder $source...")
-        val subFolder = new ClientSideFileStoreFolder(client)(FileStoreItemInfo(remotePath, isFolder = true))
+        val subFolder = new ClientSideCloudFolder(client)(CloudItemInfo(remotePath, isFolder = true))
         Files.list(source)
                 .forEach(path => {
                     val name = path.getFileName.toString
@@ -113,11 +113,11 @@ class ClientSideFileStoreFolder(client: CloudClient)(implicit override val info:
         }
     }
 
-    private def infoToItem(info: FileStoreItemInfo): FileStoreItem = {
+    private def infoToItem(info: CloudItemInfo): CloudItem = {
         if (info.isFolder)
-            new ClientSideFileStoreFolder(client)(info)
+            new ClientSideCloudFolder(client)(info)
         else
-            new FileStoreFile(info)
+            new CloudFile(info)
     }
 
 }

@@ -1,5 +1,5 @@
 #you can set your own credentials
-#note: This would only take effect if you delete the keystore and certificate.
+#note: This would only take effect if you delete the keycloud and certificate.
 name: "Batista Maxime"
 organizationalUnit: "Override"
 organization: "Override"

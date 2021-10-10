@@ -2,7 +2,7 @@ package fr.overrride.scs.client.command.commands
 
 import fr.overrride.scs.client.command.{CommandExecutor, CommandUtils}
 import fr.overrride.scs.client.connection.CloudClient
-import fr.overrride.scs.common.fs.{FileStoreFile, FileStoreFolder}
+import fr.overrride.scs.common.fs.{CloudFile, CloudFolder}
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -14,7 +14,7 @@ import java.util.Date
  * */
 class LSExecutor(client: CloudClient) extends CommandExecutor {
 
-    private val store     = client.getRootStore
+    private val cloud     = client.getRootStore
     private val formatter = new SimpleDateFormat("dd/MM/yy hh:mm:ss")
 
     /**
@@ -25,7 +25,7 @@ class LSExecutor(client: CloudClient) extends CommandExecutor {
      * */
     override def execute(implicit args: Array[String]): Unit = {
         val dir    = args.headOption.getOrElse("/")
-        val folder = CommandUtils.getFolder(store, dir, false)
+        val folder = CommandUtils.getFolder(cloud, dir, false)
         printFolder(folder)
     }
 
@@ -33,7 +33,7 @@ class LSExecutor(client: CloudClient) extends CommandExecutor {
      *
      * @param folder the folder content to print in the console
      */
-    private def printFolder(folder: FileStoreFolder): Unit = {
+    private def printFolder(folder: CloudFolder): Unit = {
         val dir  = folder.info.relativePath
         val date = formatter.format(new Date(folder.info.lastModified))
         println(s"[$date] $dir:")
@@ -47,8 +47,8 @@ class LSExecutor(client: CloudClient) extends CommandExecutor {
             val date = formatter.format(new Date(info.lastModified))
             val head = s"\t[$date] ${item.info.relativePath}"
             item match {
-                case _: FileStoreFolder => println(s"$head/...")
-                case _: FileStoreFile   => println(head)
+                case _: CloudFolder => println(s"$head/...")
+                case _: CloudFile   => println(head)
             }
         })
     }

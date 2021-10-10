@@ -45,7 +45,7 @@ object ClientMain {
         val secretsFolder = getOrElse("--secrets-folder", null)
         if (secretsFolder == null) {
             Console.err.println("Error: argument --secrets-folder not set")
-            Console.err.println("please specify a folder in which keystore and certificates can be stored.")
+            Console.err.println("please specify a folder in which keycloud and certificates can be cloudd.")
             return null
         }
         val path = Path.of(secretsFolder)
@@ -107,5 +107,4 @@ object ClientMain {
             args(index + 1)
         }
     }
-
 }

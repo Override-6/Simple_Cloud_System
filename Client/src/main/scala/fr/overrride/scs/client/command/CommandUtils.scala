@@ -13,7 +13,7 @@
 
 package fr.overrride.scs.client.command
 
-import fr.overrride.scs.common.fs.{FileStoreFolder, FileStoreItem}
+import fr.overrride.scs.common.fs.{CloudFolder, CloudItem}
 
 import java.util.regex.Pattern
 
@@ -53,10 +53,10 @@ object CommandUtils {
      * @param relativePath the complete path from the root to the targeted folder
      * @param createIfNotExists create the folder and/or its parent if they does not exists on the distant storage
      * */
-    def getFolder(root: FileStoreFolder, relativePath: String, createIfNotExists: Boolean): FileStoreFolder = {
+    def getFolder(root: CloudFolder, relativePath: String, createIfNotExists: Boolean): CloudFolder = {
         getItem(root, relativePath, createIfNotExists) match {
-            case folder: FileStoreFolder => folder
-            case _                       => throw CommandException(s"$relativePath is not a folder.")
+            case folder: CloudFolder => folder
+            case _                   => throw CommandException(s"$relativePath is not a folder.")
         }
     }
 
@@ -66,12 +66,12 @@ object CommandUtils {
      * @param relativePath the complete path from the root to the targeted item
      * @param createIfNotExists create the item and/or its parent folders if they does not exists on the distant storage
      * */
-    def getItem(root: FileStoreFolder, relativePath: String, createIfNotExists: Boolean): FileStoreItem = {
+    def getItem(root: CloudFolder, relativePath: String, createIfNotExists: Boolean): CloudItem = {
         if (relativePath.isEmpty)
             return root
-        val names                   = PathRegex.split(relativePath.dropWhile(_ == '/'))
-        var folder: FileStoreFolder = root
-        val len                     = names.length
+        val names               = PathRegex.split(relativePath.dropWhile(_ == '/'))
+        var folder: CloudFolder = root
+        val len                 = names.length
         for (i <- names.indices) {
             val name = names(i)
             folder.findItem(name) match {
@@ -82,10 +82,10 @@ object CommandUtils {
                     throw CommandException(s"Folder|file ${names.mkString("/")} does not exists.")
                 case Some(value)               =>
                     value match {
-                        case f: FileStoreFolder                   => folder = f
-                        case other: FileStoreItem if i == len - 1 =>
+                        case f: CloudFolder                   => folder = f
+                        case other: CloudItem if i == len - 1 =>
                             return other //We hit the last item, which is a file so we return the file item.
-                        case other: FileStoreItem                 =>
+                        case other: CloudItem                 =>
                             //we hit an item, but the given path was not fully iterated.
                             throw CommandException(s"${other.info.relativePath} is not a folder.")
                     }

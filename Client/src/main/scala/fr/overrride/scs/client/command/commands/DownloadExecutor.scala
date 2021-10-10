@@ -2,7 +2,7 @@ package fr.overrride.scs.client.command.commands
 
 import fr.overrride.scs.client.command.{CommandException, CommandExecutor, CommandUtils}
 import fr.overrride.scs.client.connection.CloudClient
-import fr.overrride.scs.common.fs.{FileStoreFile, FileStoreFolder}
+import fr.overrride.scs.common.fs.{CloudFile, CloudFolder}
 
 import java.nio.file.Path
 
@@ -12,7 +12,7 @@ import java.nio.file.Path
  * */
 class DownloadExecutor(client: CloudClient) extends CommandExecutor {
 
-    private val store = client.getRootStore
+    private val cloud = client.getRootStore
 
     /**
      * Syntax: download "source" -dest "destination"
@@ -31,15 +31,15 @@ class DownloadExecutor(client: CloudClient) extends CommandExecutor {
 
         val lastIndex = targetItem.lastIndexOf("/")
         //retrieves the parent folder of the targeted item
-        val parent    = CommandUtils.getFolder(store, targetItem.take(lastIndex), false)
+        val parent    = CommandUtils.getFolder(cloud, targetItem.take(lastIndex), false)
         val itemName  = targetItem.drop(lastIndex)
         val item      = parent.findItem(targetItem.drop(lastIndex)).getOrElse(throw CommandException(s"$targetItem does not exists."))
         //download the item with thanks to its parent
         item match {
-            case _: FileStoreFile   =>
+            case _: CloudFile   =>
                 println(s"Downloading file $itemName to server into $destination.")
                 parent.downloadFile(itemName, destination)
-            case _: FileStoreFolder =>
+            case _: CloudFolder =>
                 parent.downloadFolder(itemName, destination)
         }
         println("Download done !")
